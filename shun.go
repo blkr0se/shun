@@ -39,6 +39,7 @@ func (shun *Shun) Connect() error {
 	}
 
 	shun.sshClient = client
+	shun.Uploader = &SftpUploader{client}
 
 	return nil
 }
