@@ -5,33 +5,27 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Connector defines methods for establishing SSH connections.
-type Connector interface {
-	Connect(params ConnectionParams) (*ssh.Client, error)
-}
-
-type ConnectionParams struct {
-	User string
-	Ip   string
-	Port string
+type SshConnector struct {
+	User    string
+	Ip      string
+	Port    string
+	KeyFile string
 }
 
 // Connect establishes an SSH connection to the specified user and IP address.
-func (r *shun) Connect(params ConnectionParams) (*ssh.Client, error) {
+func (c *SshConnector) Connect() (*ssh.Client, error) {
 	cfg := easyssh.MakeConfig{
-		User:    params.User,
-		Server:  params.Ip,
-		Port:    params.Port,
-		KeyPath: r.KeyFile,
+		User:    c.User,
+		Server:  c.Ip,
+		Port:    c.Port,
+		KeyPath: c.KeyFile,
 	}
 
-	s, c, err := cfg.Connect()
+	s, conn, err := cfg.Connect()
 	if err != nil {
 		return nil, err
 	}
 	defer s.Close()
 
-	r.client = c
-
-	return c, err
+	return conn, nil
 }
