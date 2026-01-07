@@ -87,7 +87,8 @@ func (bc *BinSshProvider) Close() error {
 }
 
 func (bc *BinSshProvider) Wait() error {
-	return bc.cmd.Process.Kill()
+	_, err := bc.cmd.Process.Wait()
+	return err
 }
 
 // Deprecated: use NativeProvider instead.
