@@ -55,7 +55,7 @@ func TestBinProvider(t *testing.T) {
 		"-p",
 		port,
 		"-o",
-		"StrictHostKeyChecking=no", // Disable host checking for tests
+		"NoHostAuthenticationForLocalhost=yes", // Disable host checking for tests
 	}
 
 	provider := shun.NewBinProvider(args...)
