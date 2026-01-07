@@ -1,6 +1,9 @@
 package shun
 
 import (
+	"os"
+	"os/exec"
+
 	easyssh "github.com/appleboy/easyssh-proxy"
 	"golang.org/x/crypto/ssh"
 )
@@ -30,4 +33,23 @@ func (c *SshConnector) Connect() (*ssh.Client, error) {
 	defer s.Close()
 
 	return conn, nil
+}
+
+// Interactive starts a remote interactive shell using OpenSSH's client.
+func (c *SshConnector) Interactive(args ...string) error {
+	sshCmd := exec.Command("ssh", args...)
+
+	sshCmd.Stdin = os.Stdin
+	sshCmd.Stdout = os.Stdout
+	sshCmd.Stderr = os.Stderr
+
+	if err := sshCmd.Start(); err != nil {
+		return err
+	}
+
+	if err := sshCmd.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
