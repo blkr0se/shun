@@ -35,7 +35,7 @@ func (su *SftpUploader) UseProgressBar(v bool) error {
 
 // Upload writes bytes to a file on a remote server using SFTP.
 func (su *SftpUploader) Upload(src string, dst string) error {
-	sftp, err := sftp.NewClient(
+	client, err := sftp.NewClient(
 		su.sshClient,
 		sftp.UseConcurrentReads(true),
 		sftp.UseConcurrentWrites(true),
@@ -44,43 +44,55 @@ func (su *SftpUploader) Upload(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer sftp.Close()
+	defer client.Close()
 
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 
-	dstFile, err := sftp.Create(dst)
+	dstFile, err := client.Create(dst)
 	if err != nil {
 		return err
 	}
 	defer dstFile.Close()
 
-	if su.showProgress {
-		stats, _ := srcFile.Stat()
-		bar := su.tempProgressBar(stats.Size())
-		for bar.State().CurrentBytes < float64(bar.State().Max) {
-			written, err := io.CopyN(dstFile, srcFile, 6*1000*1000)
-			if err != nil {
-				if err != io.EOF {
-					return err
-				}
-			}
-
-			if err := bar.Add64(written); err != nil {
-				return err
-			}
-		}
-	} else {
+	// Default branch: don't show progress bar and upload everything at once.
+	if !su.showProgress {
 		_, err := io.Copy(dstFile, srcFile)
 		return err
+	}
+
+	return su.uploadWithProgress(srcFile, dstFile)
+}
+
+// Uploads and displays progress to the tty.
+func (su *SftpUploader) uploadWithProgress(src *os.File, dst *sftp.File) error {
+	// Create progress bar that will be displayed to the client.
+	stats, err := src.Stat()
+	if err != nil {
+		return err
+	}
+	bar := su.defaultProgressBar(stats.Size())
+
+	// Upload a few chunks of 'src' at a time.
+	// TODO(bia): Should use a totalWritten accumulator as the loop condition.
+	for bar.State().CurrentBytes < float64(bar.State().Max) {
+		written, err := io.CopyN(dst, src, 6*1000*1000)
+		if err != nil && err != io.EOF {
+			return err
+		}
+
+		// Increment progress bar that will be rendered on the next refresh.
+		if err := bar.Add64(written); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (su *SftpUploader) tempProgressBar(size int64) *progressbar.ProgressBar {
+func (su *SftpUploader) defaultProgressBar(size int64) *progressbar.ProgressBar {
 	return progressbar.NewOptions64(
 		size,
 		progressbar.OptionSetWriter(os.Stderr),
