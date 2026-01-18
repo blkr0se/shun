@@ -14,5 +14,9 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/dchest/bcrypt_pbkdf v0.0.0-20150205184540-83f37f9c154a // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/schollz/progressbar/v3 v3.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/term v0.39.0 // indirect
 )
